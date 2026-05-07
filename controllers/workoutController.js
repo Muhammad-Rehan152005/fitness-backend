@@ -1,50 +1,72 @@
 // Import the Blueprint we just created
 const Workout = require('../models/Workout');
 
-// 1. SAVE WORKOUT: Takes data from the app and saves it to MongoDB
 const createWorkout = async (req, res) => {
   try {
-    // 1. Grab the raw data sent by the mobile app
     const { name, duration, exercises } = req.body;
     
     let totalWorkoutVolume = 0;
-    let workoutHasPR = false; // We will build the PR algorithm later!
+    let workoutHasPR = false; 
 
-    // 2. The Backend Engine: Process and calculate everything
-    const processedExercises = exercises.map(ex => {
+    // Because we need to ask MongoDB questions for each exercise, we use Promise.all
+    const processedExercises = await Promise.all(exercises.map(async (ex) => {
         let exerciseVolume = 0;
 
-        // Filter out any empty sets the user didn't fill in
+        // 1. Calculate Volume for this specific exercise
         const validSets = ex.sets.filter(set => set.reps !== '');
-
-        // Calculate the volume just for this specific exercise
         validSets.forEach(set => {
             if (set.completed && set.lbs && set.reps) {
                 exerciseVolume += (parseInt(set.lbs) * parseInt(set.reps));
             }
         });
 
-        // Add this exercise's volume to the grand total
         totalWorkoutVolume += exerciseVolume;
+        let isPR = false;
+
+        // 2. THE PR ENGINE 🏆
+        if (exerciseVolume > 0) {
+            // Find all historic workouts from the vault that included this exact exercise
+            const pastWorkouts = await Workout.find({ "exercises.name": ex.name });
+
+            // What was their highest volume ever?
+            let previousMaxVolume = 0;
+            pastWorkouts.forEach(workout => {
+                const pastExercise = workout.exercises.find(e => e.name === ex.name);
+                if (pastExercise && pastExercise.volume > previousMaxVolume) {
+                    previousMaxVolume = pastExercise.volume;
+                }
+            });
+
+            // The Logic: If today beats the historic max, OR if it's their very first time doing it!
+            if (pastWorkouts.length === 0) {
+                isPR = true; // First time is always a PR!
+                workoutHasPR = true;
+            } else if (exerciseVolume > previousMaxVolume) {
+                isPR = true; // They beat their old record!
+                workoutHasPR = true;
+            }
+        }
 
         return {
             name: ex.name,
             sets: validSets,
-            volume: exerciseVolume, // Save the calculated volume to the DB
-            prAchieved: false       // Placeholder for future PR logic
+            volume: exerciseVolume, 
+            prAchieved: isPR // Save the PR status to the database!
         };
-    }).filter(ex => ex.sets.length > 0); // Don't save exercises with 0 valid sets
+    }));
 
-    // 3. Assemble the final, perfect package
+    // Filter out any exercises that had 0 valid sets
+    const finalExercises = processedExercises.filter(ex => ex.sets.length > 0);
+
+    // 3. Assemble and Save
     const newWorkout = new Workout({
         name: name || "Heavy Push Day",
         duration: duration,
         totalVolume: totalWorkoutVolume,
-        prAchieved: workoutHasPR,
-        exercises: processedExercises
+        prAchieved: workoutHasPR, // If even ONE exercise was a PR, the whole workout gets a badge
+        exercises: finalExercises
     });
 
-    // 4. Save to MongoDB
     const savedWorkout = await newWorkout.save(); 
     res.status(201).json(savedWorkout); 
 
