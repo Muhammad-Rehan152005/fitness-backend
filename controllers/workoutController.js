@@ -60,6 +60,7 @@ const createWorkout = async (req, res) => {
 
     // 3. Assemble and Save
     const newWorkout = new Workout({
+        user: req.user._id, // <-- NEW: Attaches the logged-in user's ID!
         name: name || "Heavy Push Day",
         duration: duration,
         totalVolume: totalWorkoutVolume,
@@ -78,14 +79,14 @@ const createWorkout = async (req, res) => {
 
 // 2. GET HISTORY: Fetches all saved workouts to show on the History Tab
 const getWorkouts = async (req, res) => {
-    try {
-        // Finds all workouts and sorts them by date (newest first)
-        const workouts = await Workout.find().sort({ createdAt: -1 });
-        res.status(200).json(workouts);
-    } catch (error) {
-        console.error("Error fetching history:", error);
-        res.status(500).json({ message: 'Server Error fetching workouts' });
-    }
+  try {
+    // NEW: Only find workouts where the 'user' matches the person knocking on the door
+    const workouts = await Workout.find({ user: req.user._id }).sort({ createdAt: -1 });
+    res.status(200).json(workouts);
+  } catch (error) {
+    console.error("Error fetching history:", error);
+    res.status(500).json({ message: 'Server Error fetching workouts' });
+  }
 };
 
 // Export these functions so our routes can use them
