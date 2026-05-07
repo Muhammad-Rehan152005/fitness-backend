@@ -8,21 +8,24 @@ const setSchema = new mongoose.Schema({
     completed: { type: Boolean, default: false }
 });
 
-// 2. The Blueprint for an Exercise (Contains an array of Sets)
 const exerciseSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    sets: [setSchema]
-});
+  name: { type: String, required: true },
+  sets: [setSchema],
+  // --- NEW PARAMETERS ---
+  volume: { type: Number, default: 0 }, 
+  prAchieved: { type: Boolean, default: false } 
+})
 
-// 3. The Main Blueprint for the entire Workout Session
 const workoutSchema = new mongoose.Schema({
-    name: { type: String, required: true }, // e.g., "Heavy Push Day"
-    date: { type: Date, default: Date.now }, // Automatically stamps the current time
-    duration: { type: String, default: '0m' },
-    totalVolume: { type: Number, default: 0 },
-    exercises: [exerciseSchema]
-}, {
-    timestamps: true // Automatically adds createdAt and updatedAt fields
+  name: { type: String, required: true }, 
+  date: { type: Date, default: Date.now }, 
+  duration: { type: String, default: '0m' },
+  // --- NEW PARAMETERS ---
+  totalVolume: { type: Number, default: 0 },
+  prAchieved: { type: Boolean, default: false },
+  exercises: [exerciseSchema]
+}, { 
+  timestamps: true 
 });
 
 // Compile the schema into a powerful Model and export it
