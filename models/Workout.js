@@ -16,11 +16,18 @@ const exerciseSchema = new mongoose.Schema({
   prAchieved: { type: Boolean, default: false } 
 })
 
+// Inside models/Workout.js
 const workoutSchema = new mongoose.Schema({
+  // --- NEW: The Nametag ---
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User' // Tells MongoDB this ID belongs to the User database
+  },
+  // -----------------------
   name: { type: String, required: true }, 
   date: { type: Date, default: Date.now }, 
   duration: { type: String, default: '0m' },
-  // --- NEW PARAMETERS ---
   totalVolume: { type: Number, default: 0 },
   prAchieved: { type: Boolean, default: false },
   exercises: [exerciseSchema]

@@ -1,14 +1,13 @@
 const express = require('express');
 const router = express.Router();
-
-// Import our chef functions from the controller
 const { createWorkout, getWorkouts } = require('../controllers/workoutController');
 
-// Define what happens when the frontend visits these URLs
-// POST request to /api/workouts -> Saves data
-router.post('/', createWorkout);
+// 1. Import the Bouncer
+const { protect } = require('../middleware/authMiddleware');
 
-// GET request to /api/workouts -> Fetches data
-router.get('/', getWorkouts);
+// 2. Put the bouncer in front of the doors!
+// Notice how `protect` sits right in the middle. 
+router.post('/', protect, createWorkout);
+router.get('/', protect, getWorkouts);
 
 module.exports = router;
