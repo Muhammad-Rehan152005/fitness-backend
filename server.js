@@ -10,7 +10,9 @@ app.use(express.json());
 // --- ADD THESE TWO LINES ---
 // Import the routes and tell Express to use them
 const workoutRoutes = require('./routes/workoutRoutes');
+const authRoutes = require('./routes/authRoutes'); // <-- Add this line
 app.use('/api/workouts', workoutRoutes);
+app.use('/api/auth', authRoutes); // <-- Add this line
 // ---------------------------
 
 // 2. Connect to MongoDB using the secret URI
