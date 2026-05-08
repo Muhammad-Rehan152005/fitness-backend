@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 // 1. The Blueprint for a Single Set
 const setSchema = new mongoose.Schema({
-    setNumber: { type: Number, required: true },
+    setNumber: { type: Number, default: 0 }, // Not required — frontend may not send it
     lbs: { type: String, default: '' },
-    reps: { type: String, required: true },
+    reps: { type: String, default: '0' },
     completed: { type: Boolean, default: false }
 });
 

@@ -89,8 +89,27 @@ const getWorkouts = async (req, res) => {
   }
 };
 
+// 3. GET A SINGLE WORKOUT BY ID
+const getWorkoutById = async (req, res) => {
+  try {
+    const workout = await Workout.findById(req.params.id);
+    if (!workout) {
+      return res.status(404).json({ message: 'Workout not found' });
+    }
+    // Security: ensure this workout belongs to the logged-in user
+    if (workout.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to view this workout' });
+    }
+    res.status(200).json(workout);
+  } catch (error) {
+    console.error('Error fetching workout by id:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 // Export these functions so our routes can use them
 module.exports = {
     createWorkout,
-    getWorkouts
+    getWorkouts,
+    getWorkoutById
 };
